@@ -1,0 +1,26 @@
+# Local integration secrets and runtime state
+.env.integration
+
+runtime/cpa/config.yaml
+runtime/cpa/auths/*
+!runtime/cpa/auths/.gitkeep
+runtime/cpa/logs/*
+!runtime/cpa/logs/.gitkeep
+
+runtime/new-api/data/*
+!runtime/new-api/data/.gitkeep
+runtime/new-api/logs/*
+!runtime/new-api/logs/.gitkeep
+
+# Local build and editor artifacts
+*.log
+node_modules/
+dist/
+bin/
+*.zip
+tools/mock-upstream/__pycache__/
+output/playwright/
+output/
+runtime/backups/
+!runtime/backups/.gitkeep
+source-local-backup/

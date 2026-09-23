@@ -1,0 +1,110 @@
+name: relay-stack
+
+services:
+  cpa:
+    build:
+      context: ./CLIProxyAPI-main
+      dockerfile: Dockerfile
+      args:
+        VERSION: local
+        COMMIT: local
+        BUILD_DATE: "2026-09-22"
+    container_name: relay-cpa
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8317:8317"
+    volumes:
+      - ./runtime/cpa/config.yaml:/CLIProxyAPI/config.yaml:ro
+      - ./runtime/cpa/auths:/root/.cli-proxy-api
+      - ./runtime/cpa/logs:/CLIProxyAPI/logs
+    networks:
+      - relay-network
+
+  mock-upstream:
+    build:
+      context: ./tools/mock-upstream
+      dockerfile: Dockerfile
+    container_name: relay-mock-upstream
+    restart: unless-stopped
+    environment:
+      MOCK_UPSTREAM_API_KEY: mock-upstream-key
+      MOCK_UPSTREAM_PORT: 8080
+      MOCK_TIMEOUT_SECONDS: 5
+    ports:
+      - "127.0.0.1:18080:8080"
+    networks:
+      - relay-network
+
+  new-api:
+    build:
+      context: ./new-api-main
+      dockerfile: Dockerfile
+    container_name: relay-new-api
+    restart: unless-stopped
+    command: --log-dir /app/logs
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./runtime/new-api/data:/data
+      - ./runtime/new-api/logs:/app/logs
+    environment:
+      SQL_DSN: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_CONN_STRING: redis://:${REDIS_PASSWORD}@redis:6379
+      SESSION_SECRET: ${SESSION_SECRET}
+      TZ: ${TZ:-Asia/Shanghai}
+      ERROR_LOG_ENABLED: "true"
+      BATCH_UPDATE_ENABLED: "true"
+      NODE_NAME: relay-new-api
+      RELAY_RESPONSE_HEADER_TIMEOUT: ${RELAY_RESPONSE_HEADER_TIMEOUT:-1800}
+      TRUSTED_PROXIES: none
+    depends_on:
+      cpa:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - relay-network
+
+  postgres:
+    image: postgres:15
+    container_name: relay-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - relay-network
+
+  redis:
+    image: redis:7
+    container_name: relay-redis
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - relay-network
+
+volumes:
+  postgres-data:
+
+networks:
+  relay-network:
+    driver: bridge
+
+
+
+
