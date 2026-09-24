@@ -5,7 +5,7 @@
 ## 固定上游版本
 
 - CLIProxyAPI (`CLIProxyAPI-main`): `555662940411a07460e9d24d14477a5f50dffdb5`
-- New API (`new-api-main`): `77e872c5fc9210adc934f564ce3bb4e3479b3215`（`fanfan9396-oss/new-api` fork，基于上游 `996adffe5165bd5e311e33a03a86b8aede1fe376`）
+- New API (`new-api-main`): `61938544d28262e968640c5e456cfc18d5bc99d2`（`fanfan9396-oss/new-api` fork，基于上游 `996adffe5165bd5e311e33a03a86b8aede1fe376`）
 
 CPA 固定版本与原本下载的源码包逐文件核对一致。New API 先固定在上游基线后，为本项目 Wallet Hard Cap 阶段建立了 fork 分支 `wallet-hard-cap`；当前 gitlink 固定在上述 fork commit。更新任一版本时，请更新子模块指针、重新构建并运行验收，不要直接跟随可变的 `main` 或 `latest`。
 
@@ -95,3 +95,4 @@ Client -> New API -> CPA -> Mock OpenAI upstream
 5. 完成权限、错误、页面操作和发布回滚验收。
 
 当前配置是本地集成/测试环境，不应直接暴露到公网。
+
