@@ -5,9 +5,11 @@
 ## 固定上游版本
 
 - CLIProxyAPI (`CLIProxyAPI-main`): `555662940411a07460e9d24d14477a5f50dffdb5`
-- New API (`new-api-main`): `996adffe5165bd5e311e33a03a86b8aede1fe376`
+- New API (`new-api-main`): `77e872c5fc9210adc934f564ce3bb4e3479b3215`（`fanfan9396-oss/new-api` fork，基于上游 `996adffe5165bd5e311e33a03a86b8aede1fe376`）
 
-两个固定版本与原本下载的源码包逐文件核对一致。更新上游版本时，请更新子模块指针、重新构建并运行验收，不要直接跟随可变的 `main` 或 `latest`。
+CPA 固定版本与原本下载的源码包逐文件核对一致。New API 先固定在上游基线后，为本项目 Wallet Hard Cap 阶段建立了 fork 分支 `wallet-hard-cap`；当前 gitlink 固定在上述 fork commit。更新任一版本时，请更新子模块指针、重新构建并运行验收，不要直接跟随可变的 `main` 或 `latest`。
+
+New API fork 当前仅包含钱包硬上限修复和对应测试：关闭 wallet funding 的 trust bypass；正差额结算统一走原子 user-wallet reserve；余额不足拒绝而不形成负钱包；tiered/top-up 负债测试改为拒绝，并新增多 unlimited key 共用 wallet 的测试。
 
 ## 获取源码
 
@@ -32,7 +34,7 @@ Copy-Item .env.integration.example .env.integration
 Copy-Item runtime/cpa/config.example.yaml runtime/cpa/config.yaml
 ```
 
-在 `.env.integration` 和 `runtime/cpa/config.yaml` 中替换示例值，确保 CPA 的 `api-keys` 与 `CPA_API_KEY` 一致。不要把这两个实际配置文件或任何 OAuth 文件提交到 Git。
+在 `.env.integration` 和 `runtime/cpa/config.yaml` 中替换示例值，确保 CPA 的 `api-keys` 与 `CPA_API_KEY` 一致。不要把这两个实际配置文件或任何 OAuth 文件提交到 Git。成员 New API client key 与 CPA provider credentials 分离；不要把 CPA 管理 key/provider key 发给成员。
 
 启动：
 

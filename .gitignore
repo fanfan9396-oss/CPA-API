@@ -24,3 +24,6 @@ output/
 runtime/backups/
 !runtime/backups/.gitkeep
 source-local-backup/
+
+# Internal project truth; keep local until explicitly reviewed for publication.
+/dev-docs/

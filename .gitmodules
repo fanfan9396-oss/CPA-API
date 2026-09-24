@@ -3,4 +3,4 @@
 	url = https://github.com/router-for-me/CLIProxyAPI.git
 [submodule "new-api-main"]
 	path = new-api-main
-	url = https://github.com/QuantumNous/new-api.git
+	url = https://github.com/fanfan9396-oss/new-api.git
