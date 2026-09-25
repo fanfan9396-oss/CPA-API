@@ -27,11 +27,23 @@ $pgUser = Read-EnvValue "POSTGRES_USER"
 $pgDb = Read-EnvValue "POSTGRES_DB"
 $dumpPath = Join-Path $OutputDirectory "new-api.postgres.dump"
 $manifestPath = Join-Path $OutputDirectory "manifest.txt"
+$redisDumpPath = Join-Path $OutputDirectory "redis.rdb"
 
 Write-Host "Creating PostgreSQL dump..."
 $dumpCommand = "docker compose --env-file `"$EnvFile`" -f `"$ComposeFile`" exec -T postgres pg_dump -U `"$pgUser`" -d `"$pgDb`" -Fc > `"$dumpPath`""
 cmd.exe /d /c $dumpCommand
 if ($LASTEXITCODE -ne 0) { throw "pg_dump failed" }
+
+$redisPassword = Read-EnvValue "REDIS_PASSWORD"
+Write-Host "Creating Redis RDB snapshot..."
+& docker exec relay-redis redis-cli -a $redisPassword --no-auth-warning --rdb /tmp/relay-backup.rdb
+if ($LASTEXITCODE -ne 0) { throw "Redis RDB snapshot failed" }
+try {
+    & docker cp "relay-redis:/tmp/relay-backup.rdb" $redisDumpPath
+    if ($LASTEXITCODE -ne 0) { throw "Redis RDB copy failed" }
+} finally {
+    & docker exec relay-redis rm -f /tmp/relay-backup.rdb | Out-Null
+}
 
 Copy-Item -LiteralPath (Join-Path $ProjectRoot "runtime\cpa\config.yaml") -Destination (Join-Path $OutputDirectory "cpa-config.yaml") -Force
 if (Test-Path -LiteralPath (Join-Path $ProjectRoot "runtime\cpa\auths")) {
@@ -47,6 +59,7 @@ if (Test-Path -LiteralPath (Join-Path $ProjectRoot "runtime\new-api\data")) {
     "compose_file=$ComposeFile",
     "database=$pgDb",
     "includes_database_dump=true",
+    "includes_redis_rdb=true",
     "includes_cpa_config=true",
     "includes_cpa_auths=$(Test-Path (Join-Path $ProjectRoot 'runtime\cpa\auths'))"
 ) | Set-Content -LiteralPath $manifestPath -Encoding utf8
