@@ -13,7 +13,7 @@
 - 技术取舍：`dev-docs/technical-selection.md`；当前架构 owner：`dev-docs/architecture.md`；验收：`dev-docs/acceptance.md`。
 - `dev-docs/` 被根 `.gitignore` 排除，默认本地私有。不得为提交而强行添加内部资料；公开 README 与内部开发真源分开。
 - 项目当前流程：运营方在 CPA 管理 provider credentials；New API 管理渠道和用户；成员创建自己的 New API client key。New API key 与 CPA 管理/provider 凭据不是同一种凭据。
-- New API 用户钱包/订阅余额、单个 token 的 `UnlimitedQuota`、共享 provider pool 额度及运营商账单是不同语义。按 `project-brief.md` 中已确认/待确认项执行，不能从字段名代替产品决策。
+- New API 用户钱包/订阅余额、成员自助充值订单/支付状态、单个 token 的 `UnlimitedQuota`、共享 provider pool 额度及运营商账单是不同语义。按 `project-brief.md` 中已确认/待确认项执行，不能从字段名代替产品决策。支付成功只能由经过验证且幂等的服务端回调入账。
 - 当前实现版本与证据以固定子模块 SHA、运行代码及记录日期为准；此前成员自带 provider OAuth/API Key 的方案已被用户纠正并标记为 superseded。
 
 ## 开发规则
@@ -29,6 +29,7 @@
 - 成员只能读写/撤销自己的 New API client keys；CPA 管理 API、provider credentials 和 auth files 仅供获授权运营管理员使用。
 - 密钥（API key、OAuth token、CPA auth 文件、provider secret）、数据库数据不得写入源码、文档、日志、错误、截图或 Git 历史。验证材料先脱敏，绝不回显秘密。
 - 创建/更新 New API token 时，不得信任客户端提交的 `unlimited_quota`、quota、group 或 model-limit 字段；服务端必须强制执行已经确认的用户/运营策略。
+- 自助充值时不得信任客户端“支付成功”、金额、quota 换算或订单状态；服务端必须验证网关签名、订单归属、金额、状态转换和幂等性。
 - 安全审计不等于修复授权；没有安全验证证据不得声称安全或可以上线，缺失证据必须标记未验证。
 - 未经确认，不轮换真实凭据、不更改权限/额度、不向团队或公网开放服务。
 
@@ -52,7 +53,7 @@
 
 ## 停止条件
 
-- user wallet/订阅来源、API token cap、共享 provider pool、超额/计费政策未确认且会改变用户花费或运营成本时，停止对应实现，先询问一个决定性问题。
+- 支付渠道/主体、价格/换算、退款/拒付、user wallet 资金来源、API token cap、共享 provider pool、超额/计费政策未确认且会改变用户花费或运营成本时，停止对应实现，先询问一个决定性问题。
 - 发现自助请求能授予无限额度或超越管理员模型/分组策略，而服务端拒绝负例未通过时，不向团队或公网开放。
 - 缺少有效 provider credentials 时停止真实 provider 验收，不用 mock 替代。
 - 同一问题连续三次修复失败时，停止局部补丁，重审 owner、架构与真源。
