@@ -5,7 +5,7 @@
 ## 固定上游版本
 
 - CLIProxyAPI (`CLIProxyAPI-main`): `555662940411a07460e9d24d14477a5f50dffdb5`
-- New API (`new-api-main`): `61938544d28262e968640c5e456cfc18d5bc99d2`（`fanfan9396-oss/new-api` fork，基于上游 `996adffe5165bd5e311e33a03a86b8aede1fe376`）
+- New API (`new-api-main`): `136e59d2176c8c6c403324e4773a68a8bc28e9cc`（`fanfan9396-oss/new-api` fork，`wallet-hard-cap` 分支；基于上游 `996adffe5165bd5e311e33a03a86b8aede1fe376`）
 
 CPA 固定版本与原本下载的源码包逐文件核对一致。New API 先固定在上游基线后，为本项目 Wallet Hard Cap 阶段建立了 fork 分支 `wallet-hard-cap`；当前 gitlink 固定在上述 fork commit。更新任一版本时，请更新子模块指针、重新构建并运行验收，不要直接跟随可变的 `main` 或 `latest`。
 
@@ -54,7 +54,7 @@ docker compose --env-file .env.integration -f docker-compose.integration.yml up 
 Client -> New API -> CPA -> Mock OpenAI upstream
 ```
 
-当前没有有效 OAuth，因此 Mock 上游用于验证普通/流式响应、鉴权、计费、错误、重试和超时；它不代表真实供应商验收。
+Mock 上游继续用于可重复验证普通/流式响应、鉴权、计费、错误、重试和超时。2026-09-27 已用一份获授权的 Free OAuth 在本地及私有原生 Staging 完成 CPA 与 New API 非流/流式真实请求和 usage/Wallet 结算验证；这不代表 Plus/Pro 权益、OAuth 刷新/过期、DeepSeek 或生产商业授权已通过。
 
 ## 验收
 
@@ -116,3 +116,4 @@ Client -> New API -> CPA -> Mock OpenAI upstream
 ```
 
 如要把“邀请制必须已关闭注册”作为强制门禁，使用 `-RequireInviteMode`。
+
