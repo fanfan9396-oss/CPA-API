@@ -72,6 +72,17 @@ Mock 上游继续用于可重复验证普通/流式响应、鉴权、计费、�
 
 本地最近一次记录为常规验收 14 项通过、超时验收通过。真实 OAuth、真实上游账号轮询/刷新、生产域名/TLS、备份恢复演练和完整页面交互仍未全部验收。
 
+## Web 稳定测试
+
+Windows 低内存环境建议使用串行 Vitest，避免大量 jsdom worker 并行导致 Node 内存不足：
+
+```powershell
+cd new-api-main/web
+$env:NODE_OPTIONS="--max-old-space-size=4096"
+bun run test:stable
+```
+
+`test:stable` 只限制测试执行并发，不改变业务代码；资源充足的 CI 可继续使用默认 `bun run test`。
 ## 备份
 
 备份包含 PostgreSQL 数据库、Redis RDB、CPA 配置和可能的认证材料，必须显式确认后运行：
@@ -107,6 +118,16 @@ Mock 上游继续用于可重复验证普通/流式响应、鉴权、计费、�
 
 需要保留临时数据库进行人工检查时才使用 `-KeepDatabase`，检查完成后应手动删除。该演练不替换正式灾备方案，也不会验证真实 OAuth/provider 凭据。备份脚本会同时生成敏感的 `redis.rdb`，请与 PostgreSQL dump 一样保护。
 
+### 本地运维准备检查
+
+检查本地服务、健康入口、支付回调拒绝、应用端口、备份新鲜度和私密路径边界；只读，不修改配置：
+
+```powershell
+./tools/check-ops-readiness.ps1 -RequireFreshBackup -MaxBackupAgeHours 48
+```
+
+需要机器可读结果时加 `-Json`。
+
 ### 本地准备检查
 
 在运行本地验收前，可执行只读准备检查；它不会修改注册设置、密码、数据库或凭据：
@@ -116,4 +137,3 @@ Mock 上游继续用于可重复验证普通/流式响应、鉴权、计费、�
 ```
 
 如要把“邀请制必须已关闭注册”作为强制门禁，使用 `-RequireInviteMode`。
-
