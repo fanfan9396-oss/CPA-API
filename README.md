@@ -70,7 +70,7 @@ Mock 上游继续用于可重复验证普通/流式响应、鉴权、计费、�
 ./tools/verify-timeout.ps1 -ClientApiKey "<New API client key>"
 ```
 
-本地最近一次记录为常规验收 14 项通过、超时验收通过。真实 OAuth、真实上游账号轮询/刷新、生产域名/TLS、备份恢复演练和完整页面交互仍未全部验收。
+历史常规验收记录为 14 项通过、超时验收通过；当前测试 Staging 已完成 `api.20280810.xyz` HTTPS、服务器页面/权限和 Web 分批回归。真实支付、Plus/Pro/DeepSeek、商业授权、远程监控/异地备份和公开注册生产防护仍未完成。
 
 ## Web 稳定测试
 
