@@ -1,0 +1,71 @@
+name: Build relay release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_id:
+        description: Release identifier
+        required: true
+        type: string
+      cpa_version:
+        description: Optional CPA version label for the manifest
+        required: false
+        type: string
+  push:
+    tags:
+      - relay-*
+
+permissions:
+  contents: read
+
+concurrency:
+  group: relay-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      RELEASE_ID: ${{ inputs.release_id || github.ref_name }}
+      CPA_VERSION: ${{ inputs.cpa_version || '' }}
+      OUTPUT_DIR: output/${{ inputs.release_id || github.ref_name }}
+
+    steps:
+      - name: Checkout pinned repository and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.0'
+          cache: true
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.0'
+
+      - name: Build complete release package
+        run: bash tools/build-release.sh
+
+      - name: Verify package manifest and checksums
+        run: |
+          cd "$OUTPUT_DIR"
+          sha256sum -c SHA256SUMS.txt
+          test -s CLIProxyAPI-linux-amd64
+          test -s new-api-linux-amd64
+          grep -q '^production_deploy=not-authorized$' manifest.txt
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.RELEASE_ID }}
+          path: |
+            ${{ env.OUTPUT_DIR }}.tar.gz
+            ${{ env.OUTPUT_DIR }}/manifest.txt
+            ${{ env.OUTPUT_DIR }}/SHA256SUMS.txt
+          retention-days: 14

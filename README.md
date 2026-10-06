@@ -1,13 +1,13 @@
 # CPA + New API 中转站
 
-本仓库保存本地集成环境、Mock 上游和验收工具。CPA 与 New API 以固定版本 Git 子模块引用，避免把上游源码副本及其中的第三方 OAuth 客户端常量再次复制进本仓库历史。
+本仓库保存本地集成环境、Mock 上游和验收工具。CPA 与 New API 以 Git 子模块引用；每个生产发布固定到可追溯的 SHA，开发和更新可以继续推进，但生产不会跟随 `latest` 自动漂移。
 
 ## 固定上游版本
 
 - CLIProxyAPI (`CLIProxyAPI-main`): `555662940411a07460e9d24d14477a5f50dffdb5`
-- New API (`new-api-main`): `1770e25ac3a1d5a872cf214ef6f9112c98ca250e`（`fanfan9396-oss/new-api` fork，`wallet-hard-cap` 分支；基于上游 `996adffe5165bd5e311e33a03a86b8aede1fe376`）
+- New API (`new-api-main`): `8406a722a5ec89433cc1e98e1ad633796c1b40bb`（`fanfan9396-oss/new-api` fork；当前生产发布基线）
 
-CPA 固定版本与原本下载的源码包逐文件核对一致。New API 先固定在上游基线后，为本项目 Wallet Hard Cap 阶段建立了 fork 分支 `wallet-hard-cap`；当前 gitlink 固定在上述 fork commit。更新任一版本时，请更新子模块指针、重新构建并运行验收，不要直接跟随可变的 `main` 或 `latest`。
+CPA 当前版本与原本下载的源码包逐文件核对一致。New API 先固定在上游基线后，为本项目 Wallet Hard Cap 阶段建立了 fork 分支 `wallet-hard-cap`；当前 gitlink 固定在上述 fork commit。更新任一版本时，请更新子模块指针、生成完整发布包、重新构建并运行 Staging 验收；服务器只拉取带 SHA-256 清单的指定发布包，不直接跟随可变的 `main` 或 `latest`。
 
 New API fork 当前包含钱包硬上限、CNY-to-USD quota、充值回调强化、密码重置 Token 一次性消费修复和对应测试：关闭 wallet funding 的 trust bypass；正差额结算统一走原子 user-wallet reserve；余额不足拒绝而不形成负钱包；tiered/top-up 负债测试改为拒绝，并新增多 unlimited key 共用 wallet 的测试。
 

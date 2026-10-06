@@ -1,0 +1,7 @@
+[Unit]
+Description=Relay local log and backup retention
+After=relay-backup-r2.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/retain-relay-artifacts --apply
