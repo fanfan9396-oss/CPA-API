@@ -31,8 +31,31 @@ build_new_api() {
       -o "../$output_dir/new-api-linux-amd64" ./)
 }
 
+include_management_panel() {
+  local panel_path="${CPA_PANEL_PATH:-}"
+  local panel_url="${CPA_PANEL_URL:-}"
+  local panel_sha="${CPA_PANEL_SHA256:-}"
+  if [[ -n "$panel_path" ]]; then
+    install -m 0644 "$panel_path" "$output_dir/management.html"
+  elif [[ -n "$panel_url" ]]; then
+    [[ -n "$panel_sha" ]] || { echo 'CPA_PANEL_SHA256 is required with CPA_PANEL_URL' >&2; exit 1; }
+    curl --fail --location --silent --show-error --retry 3 "$panel_url" -o "$output_dir/management.html"
+  else
+    return 0
+  fi
+  [[ -s "$output_dir/management.html" ]] || { echo 'management panel is empty' >&2; exit 1; }
+  if [[ -n "$panel_sha" ]]; then
+    printf '%s  %s\n' "$panel_sha" management.html > "$output_dir/management.html.sha256"
+    (cd "$output_dir" && sha256sum -c management.html.sha256)
+  else
+    echo 'CPA_PANEL_SHA256 is required when a management panel is supplied' >&2
+    exit 1
+  fi
+}
+
 build_cpa
 build_new_api
+include_management_panel
 
 cat > "$output_dir/manifest.txt" <<EOF
 release_id=$release_id
@@ -41,9 +64,10 @@ cpa_sha=$cpa_sha
 new_api_sha=$new_api_sha
 build_date=$build_date
 cpa_version=$(cat "$output_dir/cpa-version.txt")
+management_panel_sha256=$(sha256sum "$output_dir/management.html" 2>/dev/null | awk '{print $1}' || true)
 database_migration=review-required
 production_deploy=not-authorized
 EOF
 
-(cd "$output_dir" && sha256sum CLIProxyAPI-linux-amd64 new-api-linux-amd64 manifest.txt > SHA256SUMS.txt)
+(cd "$output_dir" && sha256sum CLIProxyAPI-linux-amd64 new-api-linux-amd64 manifest.txt management.html 2>/dev/null > SHA256SUMS.txt || sha256sum CLIProxyAPI-linux-amd64 new-api-linux-amd64 manifest.txt > SHA256SUMS.txt)
 tar -C "$(dirname "$output_dir")" -czf "$output_dir.tar.gz" "$(basename "$output_dir")"

@@ -11,6 +11,14 @@ on:
         description: Optional CPA version label for the manifest
         required: false
         type: string
+      management_panel_url:
+        description: Optional pinned CPA management panel URL
+        required: false
+        type: string
+      management_panel_sha256:
+        description: SHA-256 for the pinned management panel
+        required: false
+        type: string
   push:
     tags:
       - relay-*
@@ -29,6 +37,8 @@ jobs:
     env:
       RELEASE_ID: ${{ inputs.release_id || github.ref_name }}
       CPA_VERSION: ${{ inputs.cpa_version || '' }}
+      CPA_PANEL_URL: ${{ inputs.management_panel_url || '' }}
+      CPA_PANEL_SHA256: ${{ inputs.management_panel_sha256 || '' }}
       OUTPUT_DIR: output/${{ inputs.release_id || github.ref_name }}
 
     steps:
@@ -58,6 +68,7 @@ jobs:
           sha256sum -c SHA256SUMS.txt
           test -s CLIProxyAPI-linux-amd64
           test -s new-api-linux-amd64
+          if [[ -n "$CPA_PANEL_URL" ]]; then test -s management.html; fi
           grep -q '^production_deploy=not-authorized$' manifest.txt
 
       - name: Upload release artifact
