@@ -7,6 +7,15 @@ on:
         description: Release identifier
         required: true
         type: string
+      component:
+        description: Component to build and release independently
+        required: true
+        type: choice
+        options:
+          - new-api
+          - cpa
+          - full
+        default: full
       cpa_version:
         description: Optional CPA version label for the manifest
         required: false
@@ -36,6 +45,7 @@ jobs:
     timeout-minutes: 30
     env:
       RELEASE_ID: ${{ inputs.release_id || github.ref_name }}
+      COMPONENT: ${{ inputs.component || 'full' }}
       CPA_VERSION: ${{ inputs.cpa_version || '' }}
       CPA_PANEL_URL: ${{ inputs.management_panel_url || '' }}
       CPA_PANEL_SHA256: ${{ inputs.management_panel_sha256 || '' }}
@@ -66,9 +76,9 @@ jobs:
         run: |
           cd "$OUTPUT_DIR"
           sha256sum -c SHA256SUMS.txt
-          test -s CLIProxyAPI-linux-amd64
-          test -s new-api-linux-amd64
-          if [[ -n "$CPA_PANEL_URL" ]]; then test -s management.html; fi
+          grep -q "^component=${COMPONENT}$" manifest.txt
+          if [[ "$COMPONENT" == "cpa" || "$COMPONENT" == "full" ]]; then test -s CLIProxyAPI-linux-amd64; test -s management.html; fi
+          if [[ "$COMPONENT" == "new-api" || "$COMPONENT" == "full" ]]; then test -s new-api-linux-amd64; fi
           grep -q '^production_deploy=not-authorized$' manifest.txt
 
       - name: Upload release artifact

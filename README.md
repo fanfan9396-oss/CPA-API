@@ -4,10 +4,12 @@
 
 ## 固定上游版本
 
-- CLIProxyAPI (`CLIProxyAPI-main`): `555662940411a07460e9d24d14477a5f50dffdb5`
-- New API (`new-api-main`): `8406a722a5ec89433cc1e98e1ad633796c1b40bb`（`fanfan9396-oss/new-api` fork；当前生产发布基线）
+- CLIProxyAPI (`CLIProxyAPI-main`): `a2976eb8a303f11b4ea5177bce9f9ff752634dfc`（v8.0.16）
+- New API (`new-api-main`): `0df3fbe47956e16d16cfbd3ddf68c1c3784705f1`（`fanfan9396-oss/new-api` fork；当前已验收发布基线）
 
-CPA 当前版本与原本下载的源码包逐文件核对一致。New API 先固定在上游基线后，为本项目 Wallet Hard Cap 阶段建立了 fork 分支 `wallet-hard-cap`；当前 gitlink 固定在上述 fork commit。更新任一版本时，请更新子模块指针、生成完整发布包、重新构建并运行 Staging 验收；服务器只拉取带 SHA-256 清单的指定发布包，不直接跟随可变的 `main` 或 `latest`。
+CPA 当前固定在 v8.0.16 标签；New API 先固定在上游基线后，为本项目 Wallet、支付和并发阶段建立了 fork 分支；当前 gitlink 固定在上述 fork commit。更新组件时，请更新对应子模块指针、生成 `new-api`、`cpa` 或 `full` 组件包，重新构建并运行 Staging 验收；服务器只拉取带 SHA-256 清单的指定发布包，不直接跟随可变的 `main` 或 `latest`。
+
+组件发布边界：普通 New API 更新使用 `--new-api-only`；CPA 后端与匹配管理面板使用 `--cpa-only`；跨组件更新使用 `--all`。组件包不覆盖数据库、Redis、OAuth、SMTP、R2 Secret 或日志；New API 更新仍需单独审查数据库迁移。
 
 New API fork 当前包含钱包硬上限、CNY-to-USD quota、充值回调强化、密码重置 Token 一次性消费修复和对应测试：关闭 wallet funding 的 trust bypass；正差额结算统一走原子 user-wallet reserve；余额不足拒绝而不形成负钱包；tiered/top-up 负债测试改为拒绝，并新增多 unlimited key 共用 wallet 的测试。
 
