@@ -28,6 +28,27 @@ cpa_panel_ref="${CPA_PANEL_REF:-}"
 cpa_repository="${CPA_REPOSITORY:-https://github.com/router-for-me/CLIProxyAPI.git}"
 new_api_repository="${NEW_API_REPOSITORY:-https://github.com/fanfan9396-oss/new-api.git}"
 
+if [[ -n "${CPA_REF:-}" ]]; then
+  expected_cpa_sha="$(git -C CLIProxyAPI-main rev-parse "${CPA_REF}^{commit}")" || {
+    echo "CPA_REF does not resolve: $cpa_ref" >&2
+    exit 2
+  }
+  [[ "$expected_cpa_sha" == "$cpa_sha" ]] || {
+    echo "CPA_REF $cpa_ref does not match checked-out CPA SHA $cpa_sha" >&2
+    exit 2
+  }
+fi
+if [[ -n "${NEW_API_REF:-}" ]]; then
+  expected_new_api_sha="$(git -C new-api-main rev-parse "${NEW_API_REF}^{commit}")" || {
+    echo "NEW_API_REF does not resolve: $new_api_ref" >&2
+    exit 2
+  }
+  [[ "$expected_new_api_sha" == "$new_api_sha" ]] || {
+    echo "NEW_API_REF $new_api_ref does not match checked-out New API SHA $new_api_sha" >&2
+    exit 2
+  }
+fi
+
 build_cpa() {
   local version="${CPA_VERSION:-$(git -C CLIProxyAPI-main describe --tags --always --dirty)}"
   (cd CLIProxyAPI-main && \
