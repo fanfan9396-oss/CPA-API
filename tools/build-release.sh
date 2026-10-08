@@ -44,25 +44,24 @@ build_new_api() {
 }
 
 include_management_panel() {
-  local panel_path="${CPA_PANEL_PATH:-}"
-  local panel_url="${CPA_PANEL_URL:-}"
-  local panel_sha="${CPA_PANEL_SHA256:-}"
-  if [[ -n "$panel_path" ]]; then
-    install -m 0644 "$panel_path" "$output_dir/management.html"
-  elif [[ -n "$panel_url" ]]; then
-    [[ -n "$panel_sha" ]] || { echo 'CPA_PANEL_SHA256 is required with CPA_PANEL_URL' >&2; exit 1; }
-    curl --fail --location --silent --show-error --retry 3 "$panel_url" -o "$output_dir/management.html"
-  else
-    return 0
-  fi
+  local panel_repo="${CPA_PANEL_REPOSITORY:-https://github.com/router-for-me/Cli-Proxy-API-Management-Center}"
+  local release_api="${panel_repo/github.com/api.github.com\/repos}"
+  release_api="${release_api%/}/releases/latest"
+  local release_json panel_url panel_digest downloaded_digest
+  release_json="$(curl --fail --location --silent --show-error --retry 3 \
+    -H 'Accept: application/vnd.github+json' -H 'User-Agent: relay-release-builder' "$release_api")"
+  panel_url="$(printf '%s' "$release_json" | python -c 'import json,sys; r=json.load(sys.stdin); print(next((a.get("browser_download_url", "") for a in r.get("assets", []) if a.get("name") == "management.html"), ""))')"
+  panel_digest="$(printf '%s' "$release_json" | python -c 'import json,sys; r=json.load(sys.stdin); print(next((a.get("digest", "") for a in r.get("assets", []) if a.get("name") == "management.html"), ""))')"
+  [[ -n "$panel_url" && "$panel_url" != "null" ]] || { echo 'latest CPA management release has no management.html' >&2; exit 1; }
+  curl --fail --location --silent --show-error --retry 3 "$panel_url" -o "$output_dir/management.html"
   [[ -s "$output_dir/management.html" ]] || { echo 'management panel is empty' >&2; exit 1; }
-  if [[ -n "$panel_sha" ]]; then
-    printf '%s  %s\n' "$panel_sha" management.html > "$output_dir/management.html.sha256"
-    (cd "$output_dir" && sha256sum -c management.html.sha256)
-  else
-    echo 'CPA_PANEL_SHA256 is required when a management panel is supplied' >&2
-    exit 1
+  downloaded_digest="$(sha256sum "$output_dir/management.html" | awk '{print $1}')"
+  if [[ -n "$panel_digest" && "$panel_digest" != "null" ]]; then
+    panel_digest="${panel_digest#sha256:}"
+    [[ "$panel_digest" == "$downloaded_digest" ]] || { echo 'management panel digest mismatch' >&2; exit 1; }
   fi
+  printf '%s  %s\n' "$downloaded_digest" management.html > "$output_dir/management.html.sha256"
+  (cd "$output_dir" && sha256sum -c management.html.sha256)
 }
 
 if [[ "$component" == "cpa" || "$component" == "full" ]]; then
@@ -73,7 +72,7 @@ if [[ "$component" == "new-api" || "$component" == "full" ]]; then
 fi
 if [[ "$component" == "cpa" || "$component" == "full" ]]; then
   include_management_panel
-  [[ -s "$output_dir/management.html" ]] || { echo 'CPA and full releases require a pinned management panel' >&2; exit 1; }
+  [[ -s "$output_dir/management.html" ]] || { echo 'CPA and full releases require the current CPA management panel' >&2; exit 1; }
 fi
 
 cat > "$output_dir/manifest.txt" <<EOF
