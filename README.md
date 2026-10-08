@@ -7,6 +7,7 @@
 - 生产发布仍固定到可追溯 SHA；这只保证回滚和复现，不代表上游永久锁死。
 - New API 更新由人工选择上游/fork ref，先合并本项目定制并测试，再更新根仓库 gitlink。
 - CPA 更新由人工同时选择 CPA 后端 ref 和管理面板 release ref；两者在 manifest 中记录 `compatibility_id`，通过配对验收后才发布。
+- 管理面板默认来源为运营方 Fork `fanfan9396-oss/Cli-Proxy-API-Management-Centert-Center`，面板 ref 由人工指定。
 - GitHub Actions 只接受人工 `workflow_dispatch`，不会自动跟随 `main` 或 `latest`。
 - `tools/sync-upstream-component.sh` 只执行人工指定的上游合并，不自动推送、不自动发布；合并冲突必须人工解决并通过测试。
 
