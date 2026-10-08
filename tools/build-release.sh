@@ -51,20 +51,22 @@ build_new_api() {
 
 include_management_panel() {
   [[ -n "$cpa_panel_ref" ]] || { echo 'CPA_PANEL_REF is required for cpa/full releases' >&2; exit 2; }
-  local release_api="${cpa_panel_repository/github.com/api.github.com\/repos}"
-  release_api="${release_api%/}/releases/tags/${cpa_panel_ref}"
-  local release_json panel_url panel_digest downloaded_digest
-  release_json="$(curl --fail --location --silent --show-error --retry 3 \
-    -H 'Accept: application/vnd.github+json' -H 'User-Agent: relay-release-builder' "$release_api")"
-  panel_url="$(printf '%s' "$release_json" | python -c 'import json,sys; r=json.load(sys.stdin); print(next((a.get("browser_download_url", "") for a in r.get("assets", []) if a.get("name") == "management.html"), ""))')"
-  panel_digest="$(printf '%s' "$release_json" | python -c 'import json,sys; r=json.load(sys.stdin); print(next((a.get("digest", "") for a in r.get("assets", []) if a.get("name") == "management.html"), ""))')"
-  [[ -n "$panel_url" && "$panel_url" != "null" ]] || { echo "CPA management release $cpa_panel_ref has no management.html" >&2; exit 1; }
-  curl --fail --location --silent --show-error --retry 3 "$panel_url" -o "$output_dir/management.html"
-  [[ -s "$output_dir/management.html" ]] || { echo 'management panel is empty' >&2; exit 1; }
+  local repo_path="${cpa_panel_repository#https://github.com/}"
+  repo_path="${repo_path#ssh://git@github.com/}"
+  repo_path="${repo_path%.git}"
+  local panel_tmp panel_archive panel_root downloaded_digest
+  panel_tmp="$(mktemp -d)"
+  panel_archive="$panel_tmp/panel.tar.gz"
+  trap 'rm -rf "$panel_tmp"' RETURN
+  curl --fail --location --silent --show-error --retry 3 \
+    "https://codeload.github.com/${repo_path}/tar.gz/${cpa_panel_ref}" -o "$panel_archive"
+  tar -xzf "$panel_archive" -C "$panel_tmp"
+  panel_root="$(find "$panel_tmp" -mindepth 1 -maxdepth 1 -type d | head -n1)"
+  [[ -n "$panel_root" ]] || { echo 'management panel source archive is empty' >&2; exit 1; }
+  (cd "$panel_root" && bun install --frozen-lockfile && bun run build)
+  install -m 0644 "$panel_root/dist/index.html" "$output_dir/management.html"
+  [[ -s "$output_dir/management.html" ]] || { echo 'management panel build is empty' >&2; exit 1; }
   downloaded_digest="$(sha256sum "$output_dir/management.html" | awk '{print $1}')"
-  [[ -n "$panel_digest" && "$panel_digest" != "null" ]] || { echo "CPA management release $cpa_panel_ref has no digest" >&2; exit 1; }
-  panel_digest="${panel_digest#sha256:}"
-  [[ "$panel_digest" == "$downloaded_digest" ]] || { echo 'management panel digest mismatch' >&2; exit 1; }
   printf '%s  %s\n' "$downloaded_digest" management.html > "$output_dir/management.html.sha256"
   (cd "$output_dir" && sha256sum -c management.html.sha256)
 }
