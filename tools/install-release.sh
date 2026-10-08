@@ -49,6 +49,12 @@ if [[ -z "$component" ]]; then
 fi
 [[ "$component" == 'new-api' || "$component" == 'cpa' || "$component" == 'full' ]] || { echo 'invalid component in manifest' >&2; exit 1; }
 
+if [[ "$component" == 'cpa' || "$component" == 'full' ]]; then
+  grep -q '^cpa_ref=.' "$manifest" || { echo 'cpa_ref missing from CPA manifest' >&2; exit 1; }
+  grep -q '^cpa_panel_ref=.' "$manifest" || { echo 'cpa_panel_ref missing from CPA manifest' >&2; exit 1; }
+  grep -q '^compatibility_id=.' "$manifest" || { echo 'compatibility_id missing from CPA manifest' >&2; exit 1; }
+fi
+
 case "$mode:$component" in
   new-api-only:new-api|new-api-only:full|cpa-only:cpa|cpa-only:full|all:full) ;;
   *) echo "install mode $mode is incompatible with manifest component $component" >&2; exit 1 ;;

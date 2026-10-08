@@ -2,12 +2,13 @@
 
 本仓库保存本地集成环境、Mock 上游和验收工具。CPA 与 New API 以 Git 子模块引用；每个生产发布固定到可追溯的 SHA，开发和更新可以继续推进，但生产不会跟随 `latest` 自动漂移。
 
-## 固定上游版本
+## 上游同步与发布版本
 
-- CLIProxyAPI (`CLIProxyAPI-main`): `a2976eb8a303f11b4ea5177bce9f9ff752634dfc`（v8.0.16）
-- New API (`new-api-main`): `0df3fbe47956e16d16cfbd3ddf68c1c3784705f1`（`fanfan9396-oss/new-api` fork；当前已验收发布基线）
-
-CPA 当前固定在 v8.0.16 标签；New API 先固定在上游基线后，为本项目 Wallet、支付和并发阶段建立了 fork 分支；当前 gitlink 固定在上述 fork commit。更新组件时，请更新对应子模块指针、生成 `new-api`、`cpa` 或 `full` 组件包，重新构建并运行 Staging 验收；服务器只拉取带 SHA-256 清单的指定发布包，不直接跟随可变的 `main` 或 `latest`。
+- 生产发布仍固定到可追溯 SHA；这只保证回滚和复现，不代表上游永久锁死。
+- New API 更新由人工选择上游/fork ref，先合并本项目定制并测试，再更新根仓库 gitlink。
+- CPA 更新由人工同时选择 CPA 后端 ref 和管理面板 release ref；两者在 manifest 中记录 `compatibility_id`，通过配对验收后才发布。
+- GitHub Actions 只接受人工 `workflow_dispatch`，不会自动跟随 `main` 或 `latest`。
+- `tools/sync-upstream-component.sh` 只执行人工指定的上游合并，不自动推送、不自动发布；合并冲突必须人工解决并通过测试。
 
 组件发布边界：普通 New API 更新使用 `--new-api-only`；CPA 后端与匹配管理面板使用 `--cpa-only`；跨组件更新使用 `--all`。组件包不覆盖数据库、Redis、OAuth、SMTP、R2 Secret 或日志；New API 更新仍需单独审查数据库迁移。
 
