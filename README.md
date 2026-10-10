@@ -9,7 +9,7 @@
 - CPA 更新由人工同时选择 CPA 后端 ref 和管理面板 release ref；两者在 manifest 中记录 `compatibility_id`，通过配对验收后才发布。
 - 管理面板默认来源为运营方 Fork `fanfan9396-oss/Cli-Proxy-API-Management-Centert-Center`，面板 ref 由人工指定。
 - GitHub Actions 只接受人工 `workflow_dispatch`，不会自动跟随 `main` 或 `latest`。
-- `tools/sync-upstream-component.sh` 只执行人工指定的上游合并，不自动推送、不自动发布；合并冲突必须人工解决并通过测试。
+- `tools/sync-upstream-component.sh` 只执行人工指定的上游合并，不自动推送、不自动发布；合并冲突必须人工解决并通过测试。New API 审计设置保护路径被上游触碰时，脚本默认中止，只有人工审查后显式设置 `ALLOW_PROTECTED_OVERLAY_UPDATE=true` 才允许继续。
 
 组件发布边界：普通 New API 更新使用 `--new-api-only`；CPA 后端与匹配管理面板使用 `--cpa-only`；跨组件更新使用 `--all`。组件包不覆盖数据库、Redis、OAuth、SMTP、R2 Secret 或日志；New API 更新仍需单独审查数据库迁移。
 

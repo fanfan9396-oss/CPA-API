@@ -24,5 +24,25 @@ git -C "$directory" show-ref --verify --quiet "refs/heads/$target_branch" || {
 }
 git -C "$directory" checkout "$target_branch"
 git -C "$directory" fetch --no-tags "$upstream_url" "$upstream_ref"
+
+if [[ "$component" == "new-api" ]]; then
+  protected_paths=(
+    model/request_policy.go
+    model/request_policy_test.go
+    service/content_audit.go
+    service/content_audit_test.go
+    controller/request_policy.go
+    web/src/features/system-settings/request-policies/defaults.ts
+    web/src/features/system-settings/request-policies/request-checks-section.tsx
+    web/src/features/system-settings/request-policies/section-registry.tsx
+  )
+  protected_changes="$(git -C "$directory" diff --name-only HEAD FETCH_HEAD -- "${protected_paths[@]}")"
+  if [[ -n "$protected_changes" && "${ALLOW_PROTECTED_OVERLAY_UPDATE:-false}" != "true" ]]; then
+    echo 'upstream touches protected New API audit settings; set ALLOW_PROTECTED_OVERLAY_UPDATE=true only after manual review' >&2
+    printf '%s\n' "$protected_changes" >&2
+    exit 1
+  fi
+fi
+
 git -C "$directory" merge --no-ff --no-edit FETCH_HEAD
 echo "merged component=$component upstream_ref=$upstream_ref into branch=$target_branch"
