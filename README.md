@@ -11,7 +11,11 @@
 - GitHub Actions 只接受人工 `workflow_dispatch`，不会自动跟随 `main` 或 `latest`。
 - `tools/sync-upstream-component.sh` 只执行人工指定的上游合并，不自动推送、不自动发布；合并冲突必须人工解决并通过测试。New API 审计设置保护路径被上游触碰时，脚本默认中止，只有人工审查后显式设置 `ALLOW_PROTECTED_OVERLAY_UPDATE=true` 才允许继续。
 
-组件发布边界：普通 New API 更新使用 `--new-api-only`；CPA 后端与匹配管理面板使用 `--cpa-only`；跨组件更新使用 `--all`。组件包不覆盖数据库、Redis、OAuth、SMTP、R2 Secret 或日志；New API 更新仍需单独审查数据库迁移。
+组件发布边界：普通 New API 更新使用 `--new-api-only`；CPA 后端与匹配管理面板使用 `--cpa-only`；跨组件更新使用 `--all`。
+
+安装器将发布包内容（`component`）与本次更新授权（`mode`）分开处理。对 `full` 包，组件级部署必须先运行 `tools/install-release.sh --package <fixed-package.tar.gz> --plan`：`--new-api-only` 只更新 New API，`--cpa-only` 只更新 CPA/管理面板，只有 `--all` 才同时更新两者。计划与授权不一致时必须停止；安装后核对未选组件 SHA、mtime 和服务启动时间未变化。
+
+组件包不覆盖数据库、Redis、OAuth、SMTP、R2 Secret 或日志；New API 更新仍需单独审查数据库迁移。
 
 New API fork 当前包含钱包硬上限、CNY-to-USD quota、充值回调强化、密码重置 Token 一次性消费修复和对应测试：关闭 wallet funding 的 trust bypass；正差额结算统一走原子 user-wallet reserve；余额不足拒绝而不形成负钱包；tiered/top-up 负债测试改为拒绝，并新增多 unlimited key 共用 wallet 的测试。
 
